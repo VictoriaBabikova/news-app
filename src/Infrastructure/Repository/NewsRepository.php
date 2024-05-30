@@ -7,21 +7,21 @@ namespace App\Infrastructure\Repository;
 use App\Application\HtmlDomParser\HtmlDomParserInterface;
 use App\Domain\Entity\News;
 use App\Domain\Repository\NewsRepositoryInterface;
+use App\Infrastructure\FileCreator\FileCreator;
 use Exception;
 
-class InMemoryNewsRepository implements NewsRepositoryInterface
+class NewsRepository implements NewsRepositoryInterface
 {
+    use FileCreator;
     /**
      * @var string
      */
     private string $file;
-    private string $file_report;
     private HtmlDomParserInterface $htmlDomParser;
 
     public function __construct(HtmlDomParserInterface $htmlDomParser)
     {
         $this->file = dirname(__DIR__, 3) ."/". $_ENV['STORAGE_PATH'];
-        $this->file_report = dirname(__DIR__, 3) ."/". $_ENV['REPORT_PATH'];
         $this->htmlDomParser = $htmlDomParser;
     }
     /**
@@ -72,46 +72,12 @@ class InMemoryNewsRepository implements NewsRepositoryInterface
                     }
                 }
             }
+            if (empty($arrayList)) {
+                return [];
+            }
             return $arrayList;
         } else {
             throw new Exception("File $this->file not found");
         }
-    }
-
-    public function saveNewsInReport(array $arrayList): string
-    {
-        $string = $this->getPatternDoc();
-        $new_str = '';
-        foreach ($arrayList as $array) {
-            $new_str .= "\n<hr><div><p id='{$array['id']}'>{$array['date']}</p><a href='{$array['address']}'>{$array['name']}</a></div>\n";
-        }
-
-        $this->saveFileWithNewData($this->file_report,"<body>",  $new_str, $string);
-
-        return $this->file_report;
-    }
-
-    private function getPatternDoc(): string
-    {
-        return '<!doctype html>
-<html lang="en">
-    <head>
-       <meta charset="UTF-8">
-       <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-       <meta http-equiv="X-UA-Compatible" content="ie=edge">
-       <title>News</title>
-    </head>
-    <body>
-    </body>
-</html>';
-    }
-
-    private function saveFileWithNewData(string $file, string $substr, string $attachment, string $data): void
-    {
-        $newstring = str_replace($substr, $substr.$attachment, $data);
-
-        $myfile = fopen($file, "w+") or die("Unable to open file!");
-        fwrite($myfile, $newstring);
-        fclose($myfile);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\UseCase;
 
+use App\Application\ReportGenerator\ReportGeneratorInterface;
 use App\Application\UseCase\Request\CreateNewsReportRequest;
 use App\Application\UseCase\Response\CreateNewsReportResponse;
 use App\Domain\Repository\NewsRepositoryInterface;
@@ -12,8 +13,10 @@ use Exception;
 class CreateNewsReportUseCase
 {
     private NewsRepositoryInterface $newsRepository;
-    public function __construct(NewsRepositoryInterface $newsRepository) {
+    private ReportGeneratorInterface $reportGenerator;
+    public function __construct(NewsRepositoryInterface $newsRepository, ReportGeneratorInterface $reportGenerator) {
         $this->newsRepository = $newsRepository;
+        $this->reportGenerator = $reportGenerator;
     }
 
     /**
@@ -25,7 +28,7 @@ class CreateNewsReportUseCase
         $arrayList = $this->newsRepository->findNewsByArrayOfId($arrayList);
 
         return new CreateNewsReportResponse(
-            $this->newsRepository->saveNewsInReport($arrayList)
+            $this->reportGenerator->saveNewsInReport($arrayList)
         );
     }
 }
