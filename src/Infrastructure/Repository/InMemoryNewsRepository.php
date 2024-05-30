@@ -43,7 +43,7 @@ class InMemoryNewsRepository implements NewsRepositoryInterface
             $reflectionProperty->setAccessible(true);
             $reflectionProperty->setValue($news, ++$idOfNews);
 
-            $new_news = "<hr><div><p id='{$news->getId()}'>created at {$news->getDate()}</p><a href='{$news->getAddress()->__toString()}'>{$news->getName()->__toString()}</a></div>\n";
+            $new_news = "<hr><div><p id='{$news->getId()}'>created at {$news->getDate()->format('Y-m-d')}</p><a href='{$news->getAddress()->__toString()}'>{$news->getName()->__toString()}</a></div>\n";
 
             $this->saveFileWithNewData($this->file,"<body>\n", $new_news, $string);
 

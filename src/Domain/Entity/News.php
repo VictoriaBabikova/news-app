@@ -10,17 +10,17 @@ use App\Domain\ValueObject\Name;
 class News
 {
     private int $id;
-    private string $created_at;
+    private \DateTimeImmutable $created_at;
 
     public function __construct(
         private Name $name,
         private Address $address
     )
     {
-        $this->created_at = date('Y-m-d');
+        $this->created_at = new \DateTimeImmutable('now');
     }
 
-    public function getDate(): string
+    public function getDate(): \DateTimeImmutable
     {
         return $this->created_at;
     }
