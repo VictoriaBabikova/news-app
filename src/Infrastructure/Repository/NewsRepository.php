@@ -4,80 +4,68 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Repository;
 
-use App\Application\HtmlDomParser\HtmlDomParserInterface;
+use App\Application\HtmlDomParser\DomParserInterface;
+use App\Application\HtmlDomParser\Request\DomParserFileNameRequest;
+use App\Application\HtmlDomParser\Request\DomParserIdNewsListRequest;
 use App\Domain\Entity\News;
 use App\Domain\Repository\NewsRepositoryInterface;
 use App\Infrastructure\FileCreator\FileCreator;
-use Exception;
 
 class NewsRepository implements NewsRepositoryInterface
 {
     use FileCreator;
-    /**
-     * @var string
-     */
-    private string $file;
-    private HtmlDomParserInterface $htmlDomParser;
 
-    public function __construct(HtmlDomParserInterface $htmlDomParser)
+    private string $file;
+    private DomParserInterface $htmlDomParser;
+    private DomParserFileNameRequest $fileName;
+
+    public function __construct(DomParserInterface $htmlDomParser)
     {
         $this->file = dirname(__DIR__, 3) ."/". $_ENV['STORAGE_PATH'];
+        $this->fileName = new DomParserFileNameRequest($this->file);
         $this->htmlDomParser = $htmlDomParser;
     }
-    /**
-     * @throws Exception
-     */
+
     public function save(News $news): void
     {
-        if (file_exists($this->file)) {
-            if (!file_get_contents($this->file)) {
-                $idOfNews = 0;
-                $string = $this->getPatternDoc();
-            } else {
-                $html = $this->htmlDomParser->parse($this->file);
-                $string = $html->html();
-                $idOfNews = $html->find('p', 0)->getAttribute('id');
-            }
-
-            $reflectionProperty = new \ReflectionProperty(News::class, 'id');
-            $reflectionProperty->setAccessible(true);
-            $reflectionProperty->setValue($news, ++$idOfNews);
-
-            $new_news = "<hr><div><p id='{$news->getId()}'>created at {$news->getDate()->format('Y-m-d')}</p><a href='{$news->getAddress()->__toString()}'>{$news->getName()->__toString()}</a></div>\n";
-
-            $this->saveFileWithNewData($this->file,"<body>\n", $new_news, $string);
-
+        if (!file_get_contents($this->file)) {
+            $idOfNews = 0;
+            $string = $this->getPatternDoc();
         } else {
-            throw new Exception("File $this->file not found");
+            $string = $this->htmlDomParser->parseHtml($this->fileName);
+            $idOfNews = $this->htmlDomParser->parseId($this->fileName);
         }
+
+        $reflectionProperty = new \ReflectionProperty(News::class, 'id');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($news, ++$idOfNews->id);
+
+        $new_news = "<hr><div><p id='{$news->getId()}'>created at {$news->getDate()->format('Y-m-d')}</p><a href='{$news->getAddress()->__toString()}'>{$news->getName()->__toString()}</a></div>\n";
+
+        $this->saveFileWithNewData($this->file,"<body>\n", $new_news, $string->html);
     }
 
-    /**
-     * @throws Exception
-     */
     public function findNewsByArrayOfId(array $arrayId): array
     {
-        $arrayList = [];
-        if (file_exists($this->file)) {
-            $html =$this->htmlDomParser->parse($this->file);
-            $array = $html->find('div');
+        $arrayList = new DomParserIdNewsListRequest($arrayId);
 
-            foreach ($arrayId as $id) {
-                foreach ($array as $key => $element) {
-                    if ($id == $element->find('p', 0)->getAttribute('id')) {
-                        $arrayList[$key]['id'] = $element->find('p', 0)->getAttribute('id');
-                        $arrayList[$key]['date'] = $element->find('p', 0)->text();
-                        $arrayList[$key]['address'] = $element->find('a')[0]->href;
-                        $arrayList[$key]['name'] = $element->find('a')[0]->text();
-                    }
-                }
-            }
-            if (empty($arrayList)) {
-                return [];
-            }
-            return $arrayList;
-        } else {
-            throw new Exception("File $this->file not found");
+        $arrayNews = $this->htmlDomParser->parseDiv($this->fileName, $arrayList);
+
+        if (empty($arrayNews->arrayList)) {
+            return [];
         }
+
+        return $arrayNews->arrayList;
+    }
+
+    public function findNews(): array
+    {
+        $arrayNews = $this->htmlDomParser->parseDiv($this->fileName);
+
+        if (empty($arrayNews->arrayList)) {
+            return [];
+        }
+
+        return $arrayNews->arrayList;
     }
 }

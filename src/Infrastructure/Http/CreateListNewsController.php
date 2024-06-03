@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Http;
 
-use App\Application\UseCase\CreateListNewsUseCase;
+use App\Application\UseCase\ListNewsUseCase;
 use App\Application\UseCase\Request\CreateListNewsRequest;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 class CreateListNewsController extends AbstractFOSRestController
 {
     public function __construct(
-        private CreateListNewsUseCase $useCase,
+        private ListNewsUseCase $useCase,
     )
     {}
 

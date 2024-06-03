@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\UseCase;
 
+use App\Application\HtmlDomParser\Request\DomParserFileNameRequest;
 use Exception;
 use App\Application\UseCase\Request\CreateNewsRequest;
 use App\Application\UseCase\Response\CreateNewsResponse;
@@ -11,13 +12,13 @@ use App\Domain\Entity\News;
 use App\Domain\Repository\NewsRepositoryInterface;
 use App\Domain\ValueObject\Address;
 use App\Domain\ValueObject\Name;
-use App\Application\HtmlDomParser\HtmlDomParserInterface;
+use App\Application\HtmlDomParser\DomParserInterface;
 
 class CreateNewsUseCase
 {
     private NewsRepositoryInterface $newsRepository;
-    private HtmlDomParserInterface $htmlDomParser;
-    public function __construct(NewsRepositoryInterface $newsRepository, HtmlDomParserInterface $htmlDomParser) {
+    private DomParserInterface $htmlDomParser;
+    public function __construct(NewsRepositoryInterface $newsRepository, DomParserInterface $htmlDomParser) {
         $this->newsRepository = $newsRepository;
         $this->htmlDomParser = $htmlDomParser;
     }
@@ -27,12 +28,12 @@ class CreateNewsUseCase
      */
     public function __invoke(CreateNewsRequest $request): CreateNewsResponse
     {
-        $html = $this->htmlDomParser->parse($request->address);
+        $fileName = new DomParserFileNameRequest($request->address);
 
-        $title = $html->find('title')->text()[0];
+        $title = $this->htmlDomParser->parseTitle($fileName);
 
         $news = new News(
-            new Name($title),
+            new Name($title->title),
             new Address($request->address)
         );
 

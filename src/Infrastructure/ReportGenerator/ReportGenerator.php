@@ -21,8 +21,11 @@ class ReportGenerator implements ReportGeneratorInterface
     {
         $string = $this->getPatternDoc();
         $new_str = '';
+
         foreach ($arrayList as $array) {
-            $new_str .= "\n<hr><div><p id='{$array['id']}'>{$array['date']}</p><a href='{$array['address']}'>{$array['name']}</a></div>\n";
+            foreach ($array as $value) {
+                $new_str .= "\n<hr><div><p id='{$value['id']}'>{$value['date']}</p><a href='{$value['address']}'>{$value['name']}</a></div>\n";
+            }
         }
 
         $this->saveFileWithNewData($this->file_report,"<body>",  $new_str, $string);

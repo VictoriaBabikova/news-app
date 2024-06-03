@@ -11,4 +11,6 @@ interface NewsRepositoryInterface
     public function save(News $news): void;
 
     public function findNewsByArrayOfId(array $arrayId): array;
+
+    public function findNews(): array;
 }
